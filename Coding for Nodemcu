@@ -1,0 +1,50 @@
+#define BLYNK_PRINT Serial
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#include <SoftwareSerial.h>
+BlynkTimer timer;
+char auth[] = "ncdgrTDN08MUCvoPrmvRj0QXJispgbx3";
+char ssid[] = "iPhone";
+char pass[] = "sai546203";
+int a,b,c;
+
+BLYNK_WRITE(V0)
+{
+  a = param.asInt();
+  Serial.print(a);
+}
+
+
+BLYNK_WRITE(V1)
+{
+  b = param.asInt();
+  Serial.print(b);
+}
+
+BLYNK_WRITE(V2)
+{
+  c = param.asInt();
+  Serial.print(c);
+}
+
+void setup()
+{
+  // Debug console
+  Serial.begin(9600);
+  Serial1.begin(9600);
+  Blynk.begin(auth, ssid, pass);
+  while( WiFi.status() != WL_CONNECTED ){
+      delay(500);
+      Serial.print(".");        
+  }
+
+  Serial.println("Wifi Connected Success!");
+  Serial.print("NodeMCU IP Address : ");
+  Serial.println(WiFi.localIP() );
+}
+
+void loop()
+{
+  Blynk.run();
+  timer.run();
+}
