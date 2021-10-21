@@ -1,0 +1,200 @@
+#include <SD.h>         //include microsd coding            
+#define SD_ChipSelectPin 10  //pin to read the SD card
+#include <TMRpcm.h>          
+#include <SPI.h>       
+#include<Servo.h>      //include servo coding
+
+TMRpcm audio;         //for playing the speaker
+int soundsensor = A1;    //initialize the pin for sound sensor
+int pirmotionsensor = 6;  //initialize the pin for motionsensor
+int heartbeatsensor = A0;  //initialize the pin for heartbeat sensor 
+int led = 3;              //initialize the led pin to know the iot works
+int soundvalue;           //initialize the value for each sensor 
+int motionvalue;
+int heartbeatvalue;
+Servo servo;
+int servopos = 0;
+bool stopread = false;
+int right1=49, wrong1=48 , right2=51, wrong2=50,right3=53,wrong3=52;
+int ReadNodem;
+
+void setup() 
+{
+   Serial.begin(9600);
+   pinMode(soundsensor, INPUT); 
+   pinMode(pirmotionsensor, INPUT);
+   pinMode(heartbeatsensor, INPUT);
+   pinMode(led,OUTPUT);
+   //servo.attach(2);
+   audio.speakerPin = 9;
+   if (!SD.begin(SD_ChipSelectPin))
+   {
+    Serial.println("SD fail");
+   }
+   else
+   {
+    Serial.println("Working"); 
+   }
+   while(!Serial)
+   {
+    ;
+   }
+}
+
+void loop() 
+{  
+  //if the serial communication is available
+  if(Serial.available())  
+  {
+    //if listening mode is chosen
+    ReadNodem = Serial.read();
+    while(ReadNodem == right1)
+    {
+      Serial.println("Listening mode is on");
+      digitalWrite(led, HIGH);
+      //audio.play("Listen1.wav");
+      //delay(10000);
+      if(stopread==false)
+      {
+        for(int i=0; i<20; i++)
+        {
+        soundvalue = analogRead(soundsensor);
+        delay(1000);
+        Serial.println(soundvalue);
+        }
+       if (soundvalue == LOW )
+      {
+        Serial.println("Sound can be detected");
+        stopread = true;
+        bool stopread = speakerifdetect();
+       }
+       else if (soundvalue == HIGH)
+       {
+         Serial.println("Sound can't be detected");
+         stopread = true;
+         bool stopread = speakerifndetect();
+         delay(30000);  
+       }
+      }
+   break;
+    }
+     while(ReadNodem==wrong1)
+  {
+    Serial.println("Listening mode is off");
+    digitalWrite(led,LOW);
+    break;
+  }
+  
+  //if exercise mode is chosen
+  while(ReadNodem==right2)
+  {
+    digitalWrite(led,HIGH);
+    Serial.println("Exercise mode is on");
+    audio.play("EXERCI~1.WAV");
+    delay(10000);
+    /*servo.attach(9);
+    servo.write(0);
+    delay(1000);
+    servo.write(90);
+    delay(1000);*/ 
+  if(stopread==false)
+  {
+    for(int i=0; i<20; i++)
+        {
+         motionvalue = analogRead(pirmotionsensor);
+        delay(1000);
+        Serial.println(motionvalue);
+        }
+  //motionvalue = digitalRead(pirmotionsensor);
+  //delay(10000); 
+  if (motionvalue == LOW )
+  {
+   Serial.println("Cant detect the movement from user");
+   stopread = true;
+   bool stopread = speakersilent();
+   }
+  else if (motionvalue== HIGH)
+   {
+    Serial.println("Movement is detected");
+    //digitalWrite(led,HIGH); 
+    delay(10000);
+    stopread=true;
+    bool stopread = speakergoodjob();
+   }
+  }
+   break;
+  }
+  while(ReadNodem==wrong2)
+   {
+    Serial.println("Exercise mode is off");
+    digitalWrite(led,LOW);
+    break;
+   }
+  //if deep breathing is chosen
+while(ReadNodem == right3)
+{
+  digitalWrite(led,HIGH);
+  Serial.println("Breathing mode is on");
+  audio.play("EXERCI~4.WAV");
+  delay(10000);
+  speakerforbreathing();
+  delay(30000);
+  for(int i=0; i<5; i++)
+  {
+  heartbeatvalue = analogRead(heartbeatsensor);
+  delay(2000);
+  Serial.println(heartbeatvalue);
+  delay(2000);
+  }
+  if (heartbeatvalue < 600 )
+  {
+   Serial.println("The heartbeat is normal");
+   break;
+  }
+  else if (soundvalue > 600 )
+  {
+  speakerforbreathing(); 
+  }
+  break;
+}
+  while(ReadNodem==wrong3)
+  {
+    Serial.println("Breathing mode is off");
+    digitalWrite(led,LOW);
+    break;
+  }
+ }
+}  
+
+bool speakersilent()
+{
+  audio.play("EXERCI~3.WAV");
+  delay(10000);
+  stopread = false;
+  return stopread;
+}
+bool speakergoodjob()
+{
+ audio.play("EXERCI~2.WAV");
+ delay(1000);
+ stopread = false;
+ return stopread; 
+}
+void speakerforbreathing()
+{
+  audio.play("EX0622~1.WAV");
+}
+bool speakerifdetect()
+{  
+  audio.play("LISTEN~1.WAV");
+  delay(10000);
+  stopread = false;
+  return stopread;
+}
+bool speakerifndetect()
+{
+  audio.play("LISTEN~3.WAV");
+  delay(10000);
+  stopread = false;
+  return stopread;
+}
